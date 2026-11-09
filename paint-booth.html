@@ -1,0 +1,654 @@
+<title>Senda DRD Paint Booth</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: workshop bench — big bike stage left, paint sheet right, garage and compare below */
+:root{
+  --bg:#EEEDEA; --panel:#FFFFFF; --ink:#1E1F22; --muted:#62646B; --line:#D9D8D3;
+  --accent:#2D4FE0; --accent-soft:#E3E8FD; --danger:#B3261E; --shadow:rgba(20,20,30,.18);
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141518; --panel:#1E2024; --ink:#ECECEE; --muted:#A0A2A9; --line:#33363C;
+  --accent:#8EA2FF; --accent-soft:#252C4A; --danger:#FF8A80; --shadow:rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141518; --panel:#1E2024; --ink:#ECECEE; --muted:#A0A2A9; --line:#33363C;
+  --accent:#8EA2FF; --accent-soft:#252C4A; --danger:#FF8A80; --shadow:rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,4vw,40px);line-height:1;margin:0;letter-spacing:.01em;text-transform:uppercase}
+h1 small{display:block;font-family:var(--f-body);font-weight:500;font-size:13px;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+h2{font-family:var(--f-display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.04em;margin:0}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.stage-wrap{position:relative}
+.stage{border-radius:10px 10px 0 0;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.bd-wall{background:repeating-linear-gradient(90deg,#CFCBC4 0 7px,#BDB8B0 7px 9px)}
+.bd-garage{background:repeating-linear-gradient(90deg,#24262A 0 46px,#1E2023 46px 48px)}
+.bd-studio{background:#F4F4F2}
+.stage-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-top:1px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--muted);font:500 13px var(--f-body);padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.hint{font-size:13px;color:var(--muted)}
+.bike [data-part]{cursor:pointer}
+.bike .flash{animation:flash .45s ease-in-out 3 alternate}
+@keyframes flash{to{filter:brightness(1.6) saturate(1.3)}}
+@media (prefers-reduced-motion:reduce){.bike .flash{animation:none}}
+.pop{position:absolute;z-index:20;width:min(280px,calc(100% - 16px));background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px var(--shadow);padding:12px;display:flex;flex-direction:column;gap:10px}
+[hidden]{display:none!important}
+.pop-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pop-title{font-weight:600;font-size:14px;line-height:1.25}
+.pop-sub{font-size:12px;color:var(--muted)}
+.x{border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:0 4px}
+.sw-label{font:500 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.sw{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.sw button{aspect-ratio:1;max-width:100%;border-radius:5px;border:1px solid rgba(0,0,0,.18);cursor:pointer;padding:0}
+.sw button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.pop-row{display:flex;gap:8px;align-items:center}
+.pop-row input[type=color]{width:40px;height:34px;border:1px solid var(--line);border-radius:7px;padding:2px;background:var(--panel);cursor:pointer}
+.pop-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;align-items:center}
+.linkbtn{border:0;background:transparent;color:var(--accent);font:600 12px var(--f-body);cursor:pointer;padding:2px 0}
+.panel{padding:16px;display:flex;flex-direction:column;gap:14px}
+.parts{display:flex;flex-direction:column}
+.grp{font:500 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px 2px;border-top:1px solid var(--line);margin-top:6px}
+.grp:first-child{border-top:0;margin-top:0;padding-top:0}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px;border-radius:8px;border:1px solid transparent}
+.row.sel{background:var(--accent-soft);border-color:var(--accent)}
+.row input[type=color]{width:38px;height:38px;border:1px solid var(--line);border-radius:7px;padding:2px;background:var(--panel);cursor:pointer;grid-row:span 2}
+.row .nm{font-weight:600;font-size:14px;line-height:1.2}
+.row .wh{font-size:12px;color:var(--muted);line-height:1.25;grid-column:2}
+.row .ctl{grid-row:span 2;grid-column:3;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.hex{width:84px;font:500 12px var(--f-mono);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);text-transform:uppercase}
+.hex.bad{border-color:var(--danger);color:var(--danger)}
+select{font:500 12px var(--f-body);padding:3px 4px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:84px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 13px var(--f-body);padding:8px 12px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btn.sm{padding:5px 10px;font-size:12px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.save{display:flex;gap:8px}
+.save input{flex:1;min-width:0;font:14px var(--f-body);padding:7px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
+.toast{font-size:13px;color:var(--accent);min-height:1.2em;margin:0}
+section{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.garage{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.gcard{display:flex;flex-direction:column;cursor:pointer;overflow:hidden}
+.gcard:hover{border-color:var(--muted)}
+.gcard .thumb svg,.cmp .thumb svg{display:block;width:100%;height:auto}
+.gcard .meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px}
+.gcard .gname{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{font:500 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.del{border:0;background:transparent;color:var(--danger);font:600 12px var(--f-body);cursor:pointer;padding:2px 4px}
+.chips{display:flex;gap:3px;padding:0 10px 10px}
+.chips i{flex:1;height:8px;border-radius:2px;border:1px solid rgba(0,0,0,.12)}
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.compare{grid-template-columns:minmax(0,1fr)}}
+.cmp{padding:10px;display:flex;flex-direction:column;gap:8px}
+.cmp select{width:100%;font-size:14px;padding:6px 8px}
+.cmp .thumb{border-radius:7px;overflow:hidden}
+footer{font-size:13px;color:var(--muted)}
+.leftcol{display:flex;flex-direction:column;gap:20px;min-width:0}
+.strip{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
+.th{flex:none;height:112px;border-radius:8px;overflow:hidden;border:1px solid var(--line);padding:0;cursor:pointer;background:var(--panel);position:relative;scroll-snap-align:start}
+.th img{height:100%;width:auto;display:block}
+.th:hover{border-color:var(--muted)}
+.th .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:5px;font:600 11px var(--f-body);padding:2px 6px;cursor:pointer}
+.add-tile{flex:none;height:112px;width:130px;border-radius:8px;border:1.5px dashed var(--line);background:transparent;color:var(--muted);font:600 13px var(--f-body);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.add-tile:hover{border-color:var(--muted);color:var(--ink)}
+.viewer{position:fixed;inset:0;z-index:50;background:rgba(10,10,12,.82);display:flex;align-items:center;justify-content:center;padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.vbox{background:var(--panel);border-radius:12px;max-width:1180px;width:100%;max-height:100%;display:grid;grid-template-columns:minmax(0,1fr) 300px;overflow:hidden}
+@media (max-width:820px){.vbox{grid-template-columns:minmax(0,1fr);overflow-y:auto}}
+.vimg{background:#111;display:flex;align-items:center;justify-content:center;position:relative;min-height:240px}
+.vimg img{max-width:100%;max-height:calc(100vh - 80px);display:block;cursor:crosshair}
+.vnav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer}
+.vside{padding:16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.vcap{font-family:var(--f-display);font-weight:700;font-size:20px;text-transform:uppercase;line-height:1.1;margin:0}
+.picked{display:flex;align-items:center;gap:10px}
+.picked i{width:48px;height:48px;border-radius:8px;border:1px solid var(--line);flex:none}
+.pal{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.pal button{aspect-ratio:1;border-radius:6px;border:1px solid rgba(0,0,0,.18);cursor:pointer;padding:0}
+.pal button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.vside select{width:100%;font-size:14px;padding:6px 8px}
+.vbike{border-radius:8px;overflow:hidden}
+.vbike svg{display:block;width:100%;height:auto}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>Derbi Senda DRD · 2007 special edition</small>Paint booth</h1>
+    <p class="sub">Click any part on the bike to paint it. Shift-click to paint several parts at once.</p>
+  </header>
+
+  <div class="grid">
+    <div class="leftcol">
+    <div class="card">
+      <div class="stage-wrap" id="stageWrap">
+        <div class="stage bd-wall" id="stage"></div>
+        <div class="pop" id="pop" hidden role="dialog" aria-label="Paint part">
+          <div class="pop-head">
+            <div><div class="pop-title" id="popTitle">Main plastics</div><div class="pop-sub" id="popSub"></div></div>
+            <button class="x" id="popClose" aria-label="Close">×</button>
+          </div>
+          <div><div class="sw-label">On this bike</div><div class="sw" id="swBike"></div></div>
+          <div><div class="sw-label">Paint shop classics</div><div class="sw" id="swShop"></div></div>
+          <div class="pop-row">
+            <input type="color" id="popColor" aria-label="Pick any color">
+            <input class="hex" id="popHex" maxlength="7" aria-label="Hex code">
+            <select id="popFinish" aria-label="Finish"><option value="gloss">Gloss</option><option value="matte">Matte</option><option value="metallic">Metallic</option><option value="candy">Candy</option></select>
+          </div>
+          <div class="pop-actions">
+            <button class="linkbtn" id="popMatch">Select all parts in this color</button>
+            <button class="btn sm" id="popDone">Done</button>
+          </div>
+        </div>
+      </div>
+      <div class="stage-bar">
+        <div class="seg" role="group" aria-label="Side">
+          <button data-side="left" aria-pressed="true">Left side</button>
+          <button data-side="right" aria-pressed="false">Right side</button>
+        </div>
+        <div class="seg" role="group" aria-label="Backdrop">
+          <button data-bd="wall" aria-pressed="true">Concrete wall</button>
+          <button data-bd="city" aria-pressed="false">City street</button>
+          <button data-bd="garage" aria-pressed="false">Dark garage</button>
+          <button data-bd="studio" aria-pressed="false">Studio white</button>
+        </div>
+      </div>
+    </div>
+    <section>
+      <div class="sec-head"><h2>Inspiration</h2><span class="hint">Click a photo to open it and pick colors from it for your bike.</span></div>
+      <div class="strip" id="strip"></div>
+      <input type="file" id="addFile" accept="image/*" multiple hidden>
+    </section>
+    </div>
+
+    <aside class="card panel">
+      <div class="sec-head"><h2>Paint sheet</h2><span class="tag" id="curName">Original green</span></div>
+      <div class="parts" id="parts"></div>
+      <div class="save">
+        <input id="saveName" type="text" placeholder="Name this design, like Night violet" maxlength="40" aria-label="Design name">
+        <button class="btn primary" id="saveBtn">Save to garage</button>
+      </div>
+      <div class="btns">
+        <button class="btn" id="copyBtn">Copy paint list</button>
+        <button class="btn" id="swapBtn">Swap main and secondary</button>
+      </div>
+      <p class="toast" id="toast" role="status"></p>
+      <textarea id="copyFallback" hidden aria-label="Paint list" style="width:100%;height:120px;font:12px var(--f-mono)"></textarea>
+    </aside>
+  </div>
+
+  <div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Inspiration photo">
+    <div class="vbox">
+      <div class="vimg">
+        <img id="vImg" alt="">
+        <button class="vnav" id="vPrev" style="left:10px" aria-label="Previous photo">‹</button>
+        <button class="vnav" id="vNext" style="right:10px" aria-label="Next photo">›</button>
+      </div>
+      <div class="vside">
+        <div class="pop-head"><p class="vcap" id="vCap"></p><button class="x" id="vClose" aria-label="Close">×</button></div>
+        <p class="hint" style="margin:0">Click anywhere on the photo to pick that color, or use the palette taken from the photo.</p>
+        <div class="picked"><i id="vPicked"></i><div><div class="sw-label">Picked color</div><input class="hex" id="vHex" maxlength="7" aria-label="Picked color hex"></div></div>
+        <div><div class="sw-label">Palette from this photo</div><div class="pal" id="vPal"></div></div>
+        <div><div class="sw-label">Paint this part</div><select id="vPart" aria-label="Part to paint"></select></div>
+        <button class="btn primary" id="vApply">Apply to part</button>
+        <div class="vbike bd-wall" id="vBike"></div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><h2>Garage</h2><span class="hint">Click a design to load it. Saved designs stay in this browser.</span></div>
+    <div class="garage" id="garage"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Side by side</h2><span class="hint">Pick any two designs. They follow the side you're viewing.</span></div>
+    <div class="compare">
+      <div class="card cmp"><select id="cmpA" aria-label="Design A"></select><div class="thumb bd-wall" id="cmpAv"></div></div>
+      <div class="card cmp"><select id="cmpB" aria-label="Design B"></select><div class="thumb bd-wall" id="cmpBv"></div></div>
+    </div>
+  </section>
+
+  <footer>Screen colors are a guide only. Take the hex codes to the paint shop and match them against real paint chips in daylight, especially candy and metallic finishes.</footer>
+</div>
+
+<script>
+const PARTS=[
+ {id:'plastics',g:'Body',name:'Main plastics',where:'Shrouds, side panels, light insert',grad:true},
+ {id:'secondary',g:'Body',name:'Secondary plastics',where:'Fenders, headlight mask, tail, fork guard',grad:true},
+ {id:'seat',g:'Body',name:'Seat',where:'Seat cover',grad:true},
+ {id:'decals',g:'Body',name:'Decals',where:'DRD Edition lettering',grad:false},
+ {id:'frame',g:'Frame',name:'Frame and swingarm',where:'Aluminium beam frame, swingarm',grad:true},
+ {id:'tubes',g:'Frame',name:'Subframe and cradle',where:'Rear subframe struts, engine cradle, pivot plates',grad:false},
+ {id:'fork',g:'Frame',name:'Fork tubes',where:'Upside-down fork',grad:true},
+ {id:'rims',g:'Wheels',name:'Rims',where:'Both wheels',grad:true},
+ {id:'stripe',g:'Wheels',name:'Rim stripe',where:'Pinstripe on rim edge',grad:false},
+ {id:'engine',g:'Engine',name:'Engine block',where:'Cylinder, cases',grad:true},
+ {id:'magneto',g:'Engine',name:'Magneto cover',where:'Left side of the engine',grad:true},
+ {id:'clutch',g:'Engine',name:'Clutch cover',where:'Right side of the engine',grad:true},
+ {id:'exhaust',g:'Engine',name:'Exhaust',where:'Expansion chamber',grad:true},
+ {id:'levers',g:'Details',name:'Pedals and kickstart',where:'Gear pedal, rear brake pedal, kickstart',grad:false},
+ {id:'accents',g:'Details',name:'Small accents',where:'Cables, grips, chain, shock spring',grad:false}
+];
+const PART=Object.fromEntries(PARTS.map(p=>[p.id,p]));
+const DEFAULTS={tubes:null,magneto:'#2B2B2E',clutch:'#2B2B2E',levers:'#B9BDC2'};
+const SHOP=['#F4F5F2','#1A1A1C','#8A8D91','#C9A33B','#D7262E','#FF6A00','#FFD200','#E4FF1A','#8DD62A','#00A86B','#00D9FF','#0A5CFF','#1B2A6B','#4A1C7C','#9B3DF2','#FF3D9A'];
+const FIN={plastics:'gloss',secondary:'gloss',frame:'gloss',rims:'gloss',seat:'matte',fork:'metallic',exhaust:'metallic',engine:'matte',magneto:'metallic',clutch:'metallic'};
+const PRESETS=[
+ {key:'p-green',name:'Original green',preset:true,
+  colors:{plastics:'#8DD62A',secondary:'#F4F5F2',frame:'#E6E8EA',tubes:'#D9DCDF',rims:'#8DD62A',stripe:'#FFFFFF',seat:'#7CC425',accents:'#5FD13A',fork:'#C9A33B',decals:'#5FB82E',exhaust:'#3A3430',engine:'#1C1C1C',magneto:'#2B2B2E',clutch:'#2B2B2E',levers:'#B9BDC2'},
+  finish:{...FIN}},
+ {key:'p-purple',name:'Dark purple',preset:true,
+  colors:{plastics:'#4A1C7C',secondary:'#1B1A1F',frame:'#1B1A1F',tubes:'#4A1C7C',rims:'#9B3DF2',stripe:'#1B1A1F',seat:'#26222B',accents:'#C77DFF',fork:'#C9A33B',decals:'#9B3DF2',exhaust:'#2B2826',engine:'#1C1C1C',magneto:'#4A1C7C',clutch:'#4A1C7C',levers:'#C9A33B'},
+  finish:{...FIN,plastics:'candy',secondary:'matte',frame:'matte',magneto:'candy',clutch:'candy'}},
+ {key:'p-electric',name:'Electric',preset:true,
+  colors:{plastics:'#0A5CFF',secondary:'#F4F6F8',frame:'#F4F6F8',tubes:'#2B2F36',rims:'#00D9FF',stripe:'#FFFFFF',seat:'#0A3FB0',accents:'#E4FF1A',fork:'#C9A33B',decals:'#0A5CFF',exhaust:'#2B2826',engine:'#1C1C1C',magneto:'#0A5CFF',clutch:'#0A5CFF',levers:'#E4FF1A'},
+  finish:{...FIN,magneto:'gloss',clutch:'gloss'}},
+ {key:'p-blackred',name:'Black and red',preset:true,
+  colors:{plastics:'#1A1A1C',secondary:'#1A1A1C',frame:'#222225',tubes:'#D7262E',rims:'#1E1E20',stripe:'#D7262E',seat:'#18181A',accents:'#D7262E',fork:'#B9BDC2',decals:'#D7262E',exhaust:'#9A9A9C',engine:'#1C1C1C',magneto:'#D7262E',clutch:'#D7262E',levers:'#B9BDC2'},
+  finish:{...FIN,plastics:'matte',frame:'matte',rims:'matte',magneto:'gloss',clutch:'gloss'}}
+];
+const LS='senda-paint-booth-v1';
+const clone=o=>JSON.parse(JSON.stringify(o));
+function normalize(d){if(!d)return d;d.colors=d.colors||{};d.finish=d.finish||{};
+  for(const p of PARTS){if(!d.colors[p.id]) d.colors[p.id]=p.id==='tubes'?(d.colors.frame||'#E6E8EA'):(DEFAULTS[p.id]||'#888888');
+    if(p.grad&&!d.finish[p.id]) d.finish[p.id]=FIN[p.id]||'gloss';}
+  return d;}
+let saved=[], cur=clone(PRESETS[0]), sel='plastics', backdrop='wall', side='left', uidN=0;
+cur.key='current'; cur.preset=false;
+try{const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){saved=s.saved||[]; if(s.cur) cur=s.cur; if(s.backdrop) backdrop=s.backdrop; if(s.side) side=s.side;}}catch(e){}
+normalize(cur); saved.forEach(normalize);
+function persist(){try{localStorage.setItem(LS,JSON.stringify({saved,cur,backdrop,side}))}catch(e){}}
+
+/* color helpers */
+const h2r=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const r2h=a=>'#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('').toUpperCase();
+const mix=(a,b,t)=>{const x=h2r(a),y=h2r(b);return r2h(x.map((v,i)=>v+(y[i]-v)*t))};
+const lt=(h,t)=>mix(h,'#FFFFFF',t), dk=(h,t)=>mix(h,'#000000',t);
+function stops(h,f){
+  if(f==='matte') return [[0,lt(h,.06)],[1,dk(h,.1)]];
+  if(f==='metallic') return [[0,lt(h,.5)],[.3,h],[.6,dk(h,.28)],[.82,lt(h,.18)],[1,dk(h,.22)]];
+  if(f==='candy') return [[0,lt(h,.6)],[.22,lt(h,.12)],[.55,h],[.8,dk(h,.45)],[1,dk(h,.65)]];
+  return [[0,lt(h,.38)],[.3,h],[.78,h],[1,dk(h,.18)]];
+}
+
+/* bike drawing: drawn as the left side (front to the left); the right side mirrors it and swaps side-specific parts */
+function bikeSVG(d,interactive,sd){
+  sd=sd||'left'; const R=sd==='right';
+  const u='b'+(++uidN), C=d.colors, F=d.finish||{};
+  const P=id=>PART[id].grad?`url(#${u}-${id})`:C[id];
+  const dp=id=>interactive?` data-part="${id}"`:'';
+  let defs='';
+  PARTS.filter(p=>p.grad).forEach(p=>{
+    defs+=`<linearGradient id="${u}-${p.id}" x1="0" y1="0" x2="0.35" y2="1">`+stops(C[p.id],F[p.id]||'gloss').map(s=>`<stop offset="${s[0]}" stop-color="${s[1]}"/>`).join('')+`</linearGradient>`;
+  });
+  const decal=(x,y,a,size)=>{
+    const t=`font-family="Saira Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${size}" fill="${C.decals}"`;
+    const body=`DRD <tspan font-weight="500">EDITION</tspan>`;
+    return R?`<g transform="translate(${x} ${y}) rotate(${a}) scale(-1 1)"${dp('decals')}><text text-anchor="end" ${t}>${body}</text></g>`
+            :`<text transform="translate(${x} ${y}) rotate(${a})" ${t}${dp('decals')}>${body}</text>`;
+  };
+  const wheel=(cx,cy,front)=>{
+    let s=`<circle cx="${cx}" cy="${cy}" r="108" fill="none" stroke="#151515" stroke-width="22"/>`;
+    s+=`<circle cx="${cx}" cy="${cy}" r="117" fill="none" stroke="#2A2A2A" stroke-width="2"/>`;
+    s+=`<g${dp('rims')}><circle cx="${cx}" cy="${cy}" r="89" fill="none" stroke="${P('rims')}" stroke-width="12"/>`;
+    for(let k=0;k<10;k++){const a=k*Math.PI/5+(front?0.2:0), m=58;
+      const x1=cx+Math.cos(a)*20,y1=cy+Math.sin(a)*20,xm=cx+Math.cos(a)*m,ym=cy+Math.sin(a)*m;
+      const xa=cx+Math.cos(a-.12)*84,ya=cy+Math.sin(a-.12)*84,xb=cx+Math.cos(a+.12)*84,yb=cy+Math.sin(a+.12)*84;
+      s+=`<path d="M${x1} ${y1}L${xm} ${ym}L${xa} ${ya}M${xm} ${ym}L${xb} ${yb}" stroke="${C.rims}" stroke-width="6" stroke-linecap="round" fill="none"/>`;}
+    s+=`</g><circle cx="${cx}" cy="${cy}" r="96.5" fill="none" stroke="${C.stripe}" stroke-width="3"${dp('stripe')}/>`;
+    if(front&&!R) s+=`<circle cx="${cx}" cy="${cy}" r="56" fill="none" stroke="#B9BDC1" stroke-width="11" stroke-dasharray="15 4"/><rect x="${cx+28}" y="${cy-78}" width="26" height="40" rx="6" fill="#B8892C" transform="rotate(24 ${cx+41} ${cy-58})"/>`;
+    if(!front&&!R) s+=`<circle cx="${cx}" cy="${cy}" r="42" fill="none" stroke="#202020" stroke-width="9" stroke-dasharray="4 2"/>`;
+    if(!front&&R) s+=`<circle cx="${cx}" cy="${cy}" r="48" fill="none" stroke="#B9BDC1" stroke-width="10" stroke-dasharray="13 4"/>`;
+    s+=`<circle cx="${cx}" cy="${cy}" r="20" fill="#2A2A2A"/><circle cx="${cx}" cy="${cy}" r="7" fill="#8D9196"/>`;
+    return s;
+  };
+  const leftOnly=`
+  <g${dp('accents')}><path d="M596 386L790 378M596 414L790 462" stroke="${C.accents}" stroke-width="4"/></g>
+  <circle cx="596" cy="400" r="14" fill="#222"/>`;
+  const rightRearCaliper=`<rect x="726" y="372" width="34" height="24" rx="6" fill="#55585C" transform="rotate(-20 743 384)"/>`;
+  const cover=R
+    ?`<g${dp('clutch')}><ellipse cx="538" cy="392" rx="46" ry="38" fill="${P('clutch')}"/>
+       <ellipse cx="538" cy="392" rx="46" ry="38" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="3"/>
+       <circle cx="530" cy="384" r="12" fill="#000" fill-opacity=".25"/>
+       ${[0,1,2,3,4,5].map(i=>{const a=i*Math.PI/3+.3;return `<circle cx="${(538+Math.cos(a)*38).toFixed(1)}" cy="${(392+Math.sin(a)*31).toFixed(1)}" r="3" fill="#9AA0A6"/>`}).join('')}</g>`
+    :`<g${dp('magneto')}><circle cx="560" cy="396" r="32" fill="${P('magneto')}"/>
+       <circle cx="560" cy="396" r="32" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="3"/>
+       <circle cx="560" cy="396" r="11" fill="#000" fill-opacity=".25"/>
+       ${[0,1,2,3].map(i=>{const a=i*Math.PI/2+.6;return `<circle cx="${(560+Math.cos(a)*25).toFixed(1)}" cy="${(396+Math.sin(a)*25).toFixed(1)}" r="2.6" fill="#9AA0A6"/>`}).join('')}</g>`;
+  const levers=R
+    ?`<g${dp('levers')}><path d="M604 432L546 452" stroke="${C.levers}" stroke-width="7" stroke-linecap="round"/><rect x="530" y="444" width="22" height="12" rx="3" fill="${C.levers}"/>
+       <path d="M598 350L640 410" stroke="${C.levers}" stroke-width="7" stroke-linecap="round"/><path d="M640 410L664 404" stroke="#1A1A1A" stroke-width="9" stroke-linecap="round"/>
+       <circle cx="604" cy="432" r="6" fill="#55585C"/><circle cx="598" cy="350" r="6" fill="#55585C"/></g>`
+    :`<g${dp('levers')}><path d="M592 430L540 446" stroke="${C.levers}" stroke-width="7" stroke-linecap="round"/><path d="M540 446L540 432" stroke="${C.levers}" stroke-width="6" stroke-linecap="round"/>
+       <circle cx="592" cy="430" r="6" fill="#55585C"/></g>`;
+  const footpeg=`<path d="M606 428L646 436" stroke="#2A2A2A" stroke-width="9" stroke-linecap="round"/>`;
+  return `<svg class="bike" viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(d.name)} color scheme on a Derbi Senda DRD, ${sd} side"><defs>${defs}</defs>
+  <rect x="0" y="520" width="1000" height="40" fill="#8E8B86" opacity=".55"/>
+  <ellipse cx="500" cy="530" rx="420" ry="12" fill="#000" opacity=".22"/>
+  <g${R?' transform="translate(1000 0) scale(-1 1)"':''}>
+  ${wheel(790,420,false)}
+  <path d="M598 362L800 404L800 436L598 398Z" fill="${P('frame')}"${dp('frame')}/>
+  ${R?rightRearCaliper:''}
+  ${decal(655,392,11.8,17)}
+  ${R?'':leftOnly}
+  <path d="M482 338C436 362 424 420 452 448C500 486 600 482 662 462L655 440C596 458 514 460 478 434C456 414 462 372 498 352Z" fill="${P('exhaust')}"${dp('exhaust')}/>
+  <g${dp('engine')}><path d="M470 300L520 268L548 300L600 300L612 430L500 440L466 400Z" fill="${P('engine')}"/>
+  <path d="M478 300L520 274M484 312L526 286M490 324L532 298" stroke="#000" stroke-opacity=".45" stroke-width="4"/></g>
+  ${cover}
+  <g${dp('accents')}><path d="M628 292l18 8l-22 6l22 8l-22 6l22 8l-22 6l22 8l-22 6l18 8" fill="none" stroke="${C.accents}" stroke-width="7" stroke-linejoin="round"/></g>
+  <path d="M370 156L582 252L628 370L596 380L556 286L366 192Z" fill="${P('frame')}"${dp('frame')}/>
+  <g${dp('tubes')}><path d="M600 336L770 258M640 352L712 270M452 296L462 400Q470 452 524 452L604 438" fill="none" stroke="${C.tubes}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M600 336L770 258M640 352L712 270M452 296L462 400Q470 452 524 452L604 438" fill="none" stroke="#000" stroke-opacity=".2" stroke-width="3" transform="translate(0 3)"/>
+  <path d="M596 330L640 322L652 392L606 404Z" fill="${C.tubes}"/><circle cx="614" cy="380" r="8" fill="#5A5D61"/></g>
+  ${footpeg}
+  ${levers}
+  ${decal(524,248,24.5,16)}
+  <path d="M600 252Q760 238 848 196L860 212Q772 258 612 272Z" fill="${P('secondary')}"${dp('secondary')}/>
+  <path d="M556 190L820 150L904 138L846 200Q762 238 650 256L598 252Z" fill="${P('plastics')}"${dp('plastics')}/>
+  <path d="M770 138L934 112Q948 112 940 124L824 166L782 164Z" fill="${P('secondary')}"${dp('secondary')}/>
+  <path d="M440 160Q470 140 522 150Q600 166 700 150L806 132L818 142L702 174Q600 192 520 188L458 186Z" fill="${P('seat')}"${dp('seat')}/>
+  <path d="M370 166L452 148L458 160L378 180Z" fill="${P('secondary')}"${dp('secondary')}/>
+  <g${dp('plastics')}><path d="M350 170L468 150L548 186L520 230L470 296L408 306L372 262Z" fill="${P('plastics')}"/>
+  <path d="M418 222L486 206L470 248L424 258Z" fill="#000" opacity=".22"/></g>
+  <path d="M424 92C470 120 486 200 488 270" fill="none" stroke="${C.accents}" stroke-width="3"${dp('accents')}/>
+  ${wheel(210,420,true)}
+  <path d="M220 424L200 416L330 116L350 124Z" fill="${P('fork')}"${dp('fork')}/>
+  <path d="M220 424L200 416L238 330L258 338Z" fill="#1A1A1A" opacity=".55"/>
+  <path d="M194 398L240 296L258 304L218 410Z" fill="${P('secondary')}"${dp('secondary')}/>
+  <path d="M318 132L372 152L366 168L312 148Z" fill="#2B2B2B"/>
+  <path d="M262 196L360 190Q336 214 270 226L156 238Q168 214 262 196Z" fill="${P('secondary')}"${dp('secondary')}/>
+  <path d="M348 76L300 90Q276 140 282 192L300 230L338 206L344 150Z" fill="${P('secondary')}"${dp('secondary')}/>
+  <g${dp('plastics')}><path d="M296 128Q288 168 296 206L318 196Q312 166 318 132Z" fill="${P('plastics')}"/>
+  <circle cx="306" cy="150" r="9" fill="#E9EEF2" stroke="#9AA" stroke-width="2"/><circle cx="306" cy="184" r="9" fill="#E9EEF2" stroke="#9AA" stroke-width="2"/></g>
+  <path d="M348 110L404 94" stroke="#1A1A1A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M398 96L434 86" stroke="${C.accents}" stroke-width="13" stroke-linecap="round"${dp('accents')}/>
+  <path d="M356 104C330 130 306 190 300 250" fill="none" stroke="${C.accents}" stroke-width="3"${dp('accents')}/>
+  </g></svg>`;
+}
+
+/* city street backdrop, built once as an SVG background */
+(function cityBackdrop(){
+  let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMax slice">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FA3C6"/><stop offset=".7" stop-color="#C9D6DE"/><stop offset="1" stop-color="#E8DCC8"/></linearGradient></defs>
+  <rect width="1000" height="560" fill="url(#sky)"/>`;
+  let x=-20; while(x<1000){const w=60+rnd()*90,h=200+rnd()*170; s+=`<rect x="${x.toFixed(0)}" y="${(490-h).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="#9AAABB"/>`; x+=w+4;}
+  s+=`<rect width="1000" height="490" fill="#C9D6DE" opacity=".35"/>`;
+  const fronts=['#6A6F76','#7A6A5E','#5C636B','#8A7B6C','#64605C'];
+  x=-30; let i=0; while(x<1000){const w=110+rnd()*90,h=150+rnd()*170,top=490-h,col=fronts[i++%fronts.length];
+    s+=`<rect x="${x.toFixed(0)}" y="${top.toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="${col}"/>`;
+    s+=`<rect x="${x.toFixed(0)}" y="${top.toFixed(0)}" width="${w.toFixed(0)}" height="6" fill="#000" opacity=".18"/>`;
+    for(let wy=top+18;wy<450;wy+=34) for(let wx=x+14;wx<x+w-22;wx+=28){
+      const lit=rnd()<.22; s+=`<rect x="${wx.toFixed(0)}" y="${wy.toFixed(0)}" width="16" height="22" fill="${lit?'#F3D58E':'#3B4450'}" opacity="${lit?.95:.8}"/>`;}
+    s+=`<rect x="${(x+w/2-18).toFixed(0)}" y="448" width="36" height="42" fill="#2E3339"/>`;
+    x+=w+(rnd()<.4?18:0);}
+  for(const lx of [120,520,900]){s+=`<rect x="${lx}" y="300" width="6" height="190" fill="#3A3F45"/><path d="M${lx+3} 302q0 -14 26 -14" fill="none" stroke="#3A3F45" stroke-width="5"/><rect x="${lx+20}" y="286" width="22" height="8" rx="3" fill="#F5E3B0"/>`;}
+  s+=`<rect x="0" y="488" width="1000" height="28" fill="#B4AFA7"/>`;
+  for(let px=0;px<1000;px+=60) s+=`<path d="M${px} 488L${px-8} 516" stroke="#9C978F" stroke-width="2"/>`;
+  s+=`<rect x="0" y="514" width="1000" height="6" fill="#8D8880"/><rect x="0" y="520" width="1000" height="40" fill="#4A4D52"/>`;
+  for(let px=40;px<1000;px+=140) s+=`<rect x="${px}" y="546" width="70" height="4" fill="#D9D3C2" opacity=".7"/>`;
+  s+=`</svg>`;
+  const st=document.createElement('style');
+  st.textContent=`.bd-city{background:#9AAABB url("data:image/svg+xml,${encodeURIComponent(s)}") center bottom/cover no-repeat}`;
+  document.head.appendChild(st);
+})();
+
+/* UI */
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderStage(){$('stage').innerHTML=bikeSVG(cur,true,side);$('stage').className='stage bd-'+backdrop;}
+function renderParts(){
+  let g='',h='';
+  for(const p of PARTS){
+    if(p.g!==g){g=p.g;h+=`<div class="grp">${g}</div>`;}
+    h+=`<div class="row${p.id===sel?' sel':''}" data-row="${p.id}">
+    <input type="color" id="c-${p.id}" value="${cur.colors[p.id].toLowerCase()}" aria-label="${p.name} color">
+    <div class="nm">${p.name}</div>
+    <div class="ctl"><input class="hex" id="h-${p.id}" value="${cur.colors[p.id]}" maxlength="7" aria-label="${p.name} hex code">
+    ${p.grad?`<select id="f-${p.id}" aria-label="${p.name} finish">${['gloss','matte','metallic','candy'].map(f=>`<option value="${f}"${(cur.finish[p.id]||'gloss')===f?' selected':''}>${f[0].toUpperCase()+f.slice(1)}</option>`).join('')}</select>`:'<span class="tag">Solid</span>'}</div>
+    <div class="wh">${p.where}</div></div>`;
+  }
+  $('parts').innerHTML=h; $('curName').textContent=cur.name;
+}
+function syncRow(id){
+  const c=$('c-'+id),hx=$('h-'+id),f=$('f-'+id);
+  if(c) c.value=cur.colors[id].toLowerCase(); if(hx){hx.value=cur.colors[id];hx.classList.remove('bad');}
+  if(f) f.value=cur.finish[id]||'gloss';
+}
+function flash(ids){
+  ids.forEach(id=>document.querySelectorAll('#stage [data-part="'+id+'"]').forEach(el=>{el.classList.remove('flash');void el.getBBox;el.classList.add('flash');}));
+}
+function select(id,doFlash){
+  sel=id;
+  document.querySelectorAll('.row').forEach(r=>r.classList.toggle('sel',r.dataset.row===id));
+  if(doFlash) flash([id]);
+}
+function changed(){
+  if(!/\(edited\)$/.test(cur.name)) cur.name=cur.name+' (edited)';
+  $('curName').textContent=cur.name;
+  renderStage(); renderCompare(); persist();
+}
+function setColors(ids,hex){hex=hex.toUpperCase();ids.forEach(id=>{cur.colors[id]=hex;syncRow(id);});changed();if(!$('pop').hidden)renderPop();}
+function setFinish(ids,f){ids.filter(id=>PART[id].grad).forEach(id=>{cur.finish[id]=f;syncRow(id);});changed();}
+const validHex=v=>{v=v.trim();if(v&&v[0]!=='#')v='#'+v;return /^#[0-9a-f]{6}$/i.test(v)?v:null};
+
+/* paint sheet */
+$('parts').addEventListener('input',e=>{
+  const t=e.target, id=t.id.slice(2);
+  if(t.type==='color'){setColors([id],t.value);select(id);}
+  else if(t.classList.contains('hex')){const v=validHex(t.value); if(v) setColors([id],v); else t.classList.add('bad');}
+});
+$('parts').addEventListener('change',e=>{
+  const t=e.target, id=t.id.slice(2);
+  if(t.tagName==='SELECT'){setFinish([id],t.value);select(id,true);}
+  if(t.classList.contains('hex')&&t.classList.contains('bad')){t.value=cur.colors[id];t.classList.remove('bad');}
+});
+$('parts').addEventListener('click',e=>{const r=e.target.closest('.row');if(r&&e.target.tagName!=='SELECT'&&!e.target.classList.contains('hex')) select(r.dataset.row,true);});
+
+/* floating picker */
+let multi=[];
+function openPop(ids,x,y){
+  multi=ids; $('pop').hidden=false; renderPop();
+  const W=$('stageWrap').clientWidth, pw=$('pop').offsetWidth, ph=$('pop').offsetHeight, H=$('stage').clientHeight;
+  let l=x+16; if(l+pw>W-8) l=x-pw-16; l=Math.max(8,Math.min(l,W-pw-8));
+  let t=y-40; t=Math.max(8,Math.min(t,Math.max(8,H-ph-8)));
+  $('pop').style.left=l+'px'; $('pop').style.top=t+'px';
+}
+function closePop(){$('pop').hidden=true;multi=[];}
+function renderPop(){
+  const names=multi.map(id=>PART[id].name);
+  $('popTitle').textContent=names.length>2?names.length+' parts':names.join(' + ');
+  $('popSub').textContent=names.length>2?names.join(', '):(names.length===1?PART[multi[0]].where:'Painting both together');
+  const hex=cur.colors[multi[0]], same=multi.every(id=>cur.colors[id]===hex);
+  $('popColor').value=hex.toLowerCase(); $('popHex').value=same?hex:''; $('popHex').placeholder=same?'':'Mixed'; $('popHex').classList.remove('bad');
+  const gr=multi.filter(id=>PART[id].grad);
+  $('popFinish').hidden=!gr.length; if(gr.length) $('popFinish').value=cur.finish[gr[0]]||'gloss';
+  const bikeCols=[...new Set(PARTS.map(p=>cur.colors[p.id]))].slice(0,16);
+  const sw=c=>`<button style="background:${c}" data-c="${c}" title="${c}" aria-label="${c}" aria-pressed="${same&&c===hex}"></button>`;
+  $('swBike').innerHTML=bikeCols.map(sw).join(''); $('swShop').innerHTML=SHOP.map(sw).join('');
+}
+['swBike','swShop'].forEach(id=>$(id).addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b) setColors(multi,b.dataset.c);}));
+$('popColor').addEventListener('input',e=>setColors(multi,e.target.value));
+$('popHex').addEventListener('input',e=>{const v=validHex(e.target.value);if(v){setColors(multi,v);}else e.target.classList.add('bad');});
+$('popFinish').addEventListener('change',e=>setFinish(multi,e.target.value));
+$('popMatch').addEventListener('click',()=>{const hex=cur.colors[multi[0]];multi=PARTS.filter(p=>cur.colors[p.id]===hex).map(p=>p.id);renderPop();flash(multi);});
+$('popClose').addEventListener('click',closePop); $('popDone').addEventListener('click',closePop);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('pop').hidden)closePop();});
+document.addEventListener('pointerdown',e=>{if(!$('pop').hidden&&!$('pop').contains(e.target)&&!e.target.closest('#stage [data-part]'))closePop();});
+$('stage').addEventListener('click',e=>{
+  const el=e.target.closest('[data-part]'); if(!el) return;
+  const id=el.dataset.part; let ids=[id];
+  if((e.shiftKey||e.ctrlKey||e.metaKey)&&!$('pop').hidden){ids=multi.includes(id)?multi.filter(x=>x!==id):[...multi,id]; if(!ids.length){closePop();return;}}
+  const r=$('stageWrap').getBoundingClientRect();
+  openPop(ids,e.clientX-r.left,e.clientY-r.top); select(id,true);
+});
+
+/* toggles */
+document.querySelectorAll('[data-bd]').forEach(b=>b.addEventListener('click',()=>{backdrop=b.dataset.bd;syncToggles();renderStage();renderGarage();renderCompare();persist();}));
+document.querySelectorAll('[data-side]').forEach(b=>b.addEventListener('click',()=>{side=b.dataset.side;closePop();syncToggles();renderStage();renderCompare();persist();}));
+function syncToggles(){
+  document.querySelectorAll('[data-bd]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.bd===backdrop));
+  document.querySelectorAll('[data-side]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.side===side));
+}
+
+/* garage, save, compare */
+function chips(d){return `<div class="chips">${['plastics','secondary','frame','rims','seat','accents','fork'].map(k=>`<i style="background:${d.colors[k]}"></i>`).join('')}</div>`}
+function renderGarage(){
+  $('garage').innerHTML=[...PRESETS,...saved].map(d=>`<div class="card gcard" role="button" tabindex="0" data-key="${d.key}" aria-label="Load ${esc(d.name)}">
+    <div class="thumb bd-${backdrop}">${bikeSVG(d,false,'left')}</div>
+    <div class="meta"><span class="gname">${esc(d.name)}</span>${d.preset?'<span class="tag">Preset</span>':`<button class="del" data-del="${d.key}" aria-label="Delete ${esc(d.name)}">Delete</button>`}</div>
+    ${chips(d)}</div>`).join('');
+}
+function load(key){const d=[...PRESETS,...saved].find(x=>x.key===key);if(!d)return;cur=normalize(clone(d));cur.key='current';cur.preset=false;closePop();renderParts();renderStage();renderCompare();persist();toast('Loaded '+d.name);window.scrollTo({top:0,behavior:'smooth'});}
+$('garage').addEventListener('click',e=>{
+  const del=e.target.closest('[data-del]');
+  if(del){e.stopPropagation();
+    if(del.dataset.armed){saved=saved.filter(s=>s.key!==del.dataset.del);persist();renderGarage();fillSelects();renderCompare();toast('Deleted');}
+    else{del.dataset.armed='1';del.textContent='Delete?';setTimeout(()=>{if(del.isConnected){delete del.dataset.armed;del.textContent='Delete';}},2500);}
+    return;}
+  const c=e.target.closest('[data-key]'); if(c) load(c.dataset.key);
+});
+$('garage').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.key){e.preventDefault();load(e.target.dataset.key);}});
+$('saveBtn').addEventListener('click',()=>{
+  const n=$('saveName').value.trim()||('My design '+(saved.length+1));
+  const d=clone(cur); d.name=n; d.key='s-'+Date.now(); d.preset=false;
+  saved.push(d); cur.name=n; $('curName').textContent=n; $('saveName').value='';
+  persist(); renderGarage(); fillSelects(); $('cmpB').value=d.key; renderCompare(); toast('Saved '+n+' to the garage');
+});
+$('swapBtn').addEventListener('click',()=>{
+  [cur.colors.plastics,cur.colors.secondary]=[cur.colors.secondary,cur.colors.plastics];
+  [cur.finish.plastics,cur.finish.secondary]=[cur.finish.secondary,cur.finish.plastics];
+  syncRow('plastics');syncRow('secondary');changed();
+});
+function paintList(){
+  let g='',out='Derbi Senda DRD – '+cur.name+'\n';
+  for(const p of PARTS){if(p.g!==g){g=p.g;out+='\n'+g.toUpperCase()+'\n';} out+=`${p.name} (${p.where}): ${cur.colors[p.id]}${p.grad?' '+(cur.finish[p.id]||'gloss'):''}\n`;}
+  return out.trim();
+}
+$('copyBtn').addEventListener('click',()=>{
+  const txt=paintList();
+  const fb=()=>{const t=$('copyFallback');t.hidden=false;t.value=txt;t.focus();t.select();toast('Select all and copy the list below');};
+  try{navigator.clipboard.writeText(txt).then(()=>{$('copyFallback').hidden=true;toast('Paint list copied');},fb);}catch(e){fb();}
+});
+let tt; function toast(m){$('toast').textContent=m;clearTimeout(tt);tt=setTimeout(()=>$('toast').textContent='',2600);}
+function fillSelects(){
+  const opts='<option value="current">On the bench now</option>'+[...PRESETS,...saved].map(d=>`<option value="${d.key}">${esc(d.name)}</option>`).join('');
+  ['cmpA','cmpB'].forEach(id=>{const v=$(id).value;$(id).innerHTML=opts;if(v&&[...$(id).options].some(o=>o.value===v))$(id).value=v;});
+}
+function renderCompare(){
+  const get=k=>k==='current'?cur:[...PRESETS,...saved].find(d=>d.key===k)||cur;
+  ['A','B'].forEach(s=>{const v=$('cmp'+s+'v');v.className='thumb bd-'+backdrop;v.innerHTML=bikeSVG(get($('cmp'+s).value),false,side);});
+}
+['cmpA','cmpB'].forEach(id=>$(id).addEventListener('change',renderCompare));
+
+/* inspiration gallery */
+const INSP=[
+ 'Pink and black graphics by the sea','Black and red show bike','DRD Edition front end in lime','Black and white with gold fork',
+ 'Aubergine DRD Edition','Charcoal and cobalt twins','Lime DRD Edition, left side','Electric cobalt DRD',
+ 'Electric blue with cyan rims','Black and purple with pink details','Violet and cyan twins','Black and gold racer',
+ 'Stealth black','Black and white graphic kit','Black with red details in snow','Bare frame with blue rims',
+ 'Black, silver and gold','Black seat with purple ribs','Green and black street bike'
+].map((cap,i)=>{const n=String(i+1).padStart(2,'0');return {id:'b'+n,cap,src:`inspiration/insp-${n}.jpg`,th:`inspiration/insp-${n}-t.jpg`,builtin:true}});
+let userPhotos=[], vIndex=0, vColor='#8DD62A';
+const IDB={db:null,
+  open(){return new Promise((res,rej)=>{try{const r=indexedDB.open('senda-inspiration',1);r.onupgradeneeded=()=>r.result.createObjectStore('photos',{keyPath:'id'});r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error);}catch(e){rej(e)}})},
+  tx(mode){return this.db.transaction('photos',mode).objectStore('photos')},
+  all(){return new Promise(res=>{try{const q=this.tx('readonly').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])}catch(e){res([])}})},
+  put(o){return new Promise(res=>{try{const q=this.tx('readwrite').put(o);q.onsuccess=()=>res(true);q.onerror=()=>res(false)}catch(e){res(false)}})},
+  del(id){return new Promise(res=>{try{const q=this.tx('readwrite').delete(id);q.onsuccess=()=>res(true);q.onerror=()=>res(false)}catch(e){res(false)}})}
+};
+const allPhotos=()=>[...INSP,...userPhotos];
+function renderStrip(){
+  $('strip').innerHTML=allPhotos().map((p,i)=>`<div class="th" role="button" tabindex="0" data-i="${i}" aria-label="Open ${esc(p.cap)}"><img src="${p.th}" alt="${esc(p.cap)}">${p.builtin?'':`<button class="rm" data-rm="${p.id}" aria-label="Remove ${esc(p.cap)}">Remove</button>`}</div>`).join('')
+   +`<button class="add-tile" id="addTile"><span style="font-size:22px;line-height:1">+</span>Add photos</button>`;
+}
+$('strip').addEventListener('click',async e=>{
+  const rm=e.target.closest('[data-rm]');
+  if(rm){e.stopPropagation();
+    if(rm.dataset.armed){await IDB.del(rm.dataset.rm);userPhotos=userPhotos.filter(p=>p.id!==rm.dataset.rm);renderStrip();toast('Photo removed');}
+    else{rm.dataset.armed='1';rm.textContent='Remove?';setTimeout(()=>{if(rm.isConnected){delete rm.dataset.armed;rm.textContent='Remove';}},2500);}
+    return;}
+  if(e.target.closest('#addTile')){$('addFile').click();return;}
+  const t=e.target.closest('[data-i]'); if(t) openViewer(+t.dataset.i);
+});
+$('strip').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.i){e.preventDefault();openViewer(+e.target.dataset.i);}});
+function shrinkTo(img,max,q){const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q);}
+$('addFile').addEventListener('change',async e=>{
+  const files=[...e.target.files]; let added=0;
+  for(const f of files){
+    try{const url=URL.createObjectURL(f);const img=new Image();img.src=url;await img.decode();
+      const p={id:'u'+Date.now()+'-'+added,cap:f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' '),src:shrinkTo(img,1400,.85),th:shrinkTo(img,420,.8)};
+      URL.revokeObjectURL(url); userPhotos.push(p); added++;
+      if(IDB.db) await IDB.put(p);
+    }catch(err){}
+  }
+  e.target.value=''; renderStrip();
+  toast(added?(added+' photo'+(added>1?'s':'')+' added'+(IDB.db?'':'. They will be gone after you reload, because this browser blocks storage.')):'That file could not be opened as a photo.');
+});
+
+/* photo viewer with color picking */
+const sampleCanvas=document.createElement('canvas'); let sampleCtx=null;
+function openViewer(i){
+  vIndex=(i+allPhotos().length)%allPhotos().length; const p=allPhotos()[vIndex];
+  closePop(); $('viewer').hidden=false; document.body.style.overflow='hidden';
+  $('vCap').textContent=p.cap; $('vImg').alt=p.cap; $('vPal').innerHTML='';
+  $('vImg').onload=()=>{const img=$('vImg');const s=Math.min(1,600/img.naturalWidth);sampleCanvas.width=Math.round(img.naturalWidth*s);sampleCanvas.height=Math.round(img.naturalHeight*s);
+    sampleCtx=sampleCanvas.getContext('2d',{willReadFrequently:true});sampleCtx.drawImage(img,0,0,sampleCanvas.width,sampleCanvas.height);renderPalette();};
+  $('vImg').src=p.src;
+  $('vPart').innerHTML=PARTS.map(q=>`<option value="${q.id}"${q.id===sel?' selected':''}>${q.name}</option>`).join('');
+  setPicked(vColor); renderVBike(); $('vClose').focus();
+}
+function closeViewer(){$('viewer').hidden=true;document.body.style.overflow='';}
+function setPicked(hex){vColor=hex.toUpperCase();$('vPicked').style.background=vColor;$('vHex').value=vColor;$('vHex').classList.remove('bad');
+  document.querySelectorAll('#vPal [data-c]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===vColor));}
+function renderVBike(){$('vBike').className='vbike bd-'+backdrop;$('vBike').innerHTML=bikeSVG(cur,false,side);}
+function renderPalette(){
+  if(!sampleCtx) return;
+  let d; try{d=sampleCtx.getImageData(0,0,sampleCanvas.width,sampleCanvas.height).data;}
+  catch(e){sampleCtx=null;$('vPal').innerHTML='<p class="hint" style="grid-column:1/-1;margin:0">This browser blocks reading colors from photos opened as a file. Run <code>npm run serve</code> and open the page from there.</p>';return;}
+  const bins=new Map();
+  for(let i=0;i<d.length;i+=16){const r=d[i],g=d[i+1],b=d[i+2];const k=(r>>4)<<8|(g>>4)<<4|(b>>4);const v=bins.get(k)||{n:0,r:0,g:0,b:0};v.n++;v.r+=r;v.g+=g;v.b+=b;bins.set(k,v);}
+  const cands=[...bins.values()].map(v=>{const r=v.r/v.n,g=v.g/v.n,b=v.b/v.n,mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx?(mx-mn)/mx:0;return {r,g,b,n:v.n,sat,score:v.n*(0.06+sat*sat*7)}}).sort((a,b)=>b.score-a.score);
+  const pick=[];let grays=0;
+  for(const c of cands){const gray=c.sat<0.18; if(gray&&grays>=2) continue;
+    if(pick.every(p=>Math.hypot(p.r-c.r,p.g-c.g,p.b-c.b)>55)){pick.push(c); if(gray) grays++;}
+    if(pick.length===6) break;}
+  pick.sort((a,b)=>b.sat-a.sat);
+  $('vPal').innerHTML=pick.map(c=>{const h=r2h([c.r,c.g,c.b]);return `<button style="background:${h}" data-c="${h}" title="${h}" aria-label="${h}" aria-pressed="false"></button>`}).join('');
+}
+$('vPal').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b) setPicked(b.dataset.c);});
+$('vImg').addEventListener('click',e=>{
+  if(!sampleCtx) return; const r=e.target.getBoundingClientRect();
+  const x=Math.round((e.clientX-r.left)/r.width*sampleCanvas.width), y=Math.round((e.clientY-r.top)/r.height*sampleCanvas.height);
+  const d=sampleCtx.getImageData(Math.max(0,x-2),Math.max(0,y-2),5,5).data; let s=[0,0,0],n=0;
+  for(let i=0;i<d.length;i+=4){s[0]+=d[i];s[1]+=d[i+1];s[2]+=d[i+2];n++;}
+  setPicked(r2h(s.map(v=>v/n)));
+});
+$('vHex').addEventListener('input',e=>{const v=validHex(e.target.value);if(v) setPicked(v); else e.target.classList.add('bad');});
+$('vApply').addEventListener('click',()=>{const id=$('vPart').value;setColors([id],vColor);select(id);renderVBike();toast(PART[id].name+' painted '+vColor);});
+$('vPart').addEventListener('change',e=>select(e.target.value));
+$('vClose').addEventListener('click',closeViewer);
+$('vPrev').addEventListener('click',()=>openViewer(vIndex-1));
+$('vNext').addEventListener('click',()=>openViewer(vIndex+1));
+$('viewer').addEventListener('click',e=>{if(e.target.id==='viewer')closeViewer();});
+document.addEventListener('keydown',e=>{if($('viewer').hidden)return; if(e.key==='Escape')closeViewer(); if(e.key==='ArrowLeft')openViewer(vIndex-1); if(e.key==='ArrowRight')openViewer(vIndex+1);});
+
+renderStrip();
+IDB.open().then(()=>IDB.all()).then(list=>{userPhotos=list;renderStrip();}).catch(()=>{});
+
+renderParts(); renderGarage(); fillSelects();
+$('cmpA').value='p-purple'; $('cmpB').value='p-electric';
+syncToggles(); renderStage(); renderCompare(); select(sel);
+</script>

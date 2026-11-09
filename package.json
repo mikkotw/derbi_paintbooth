@@ -1,0 +1,10 @@
+{
+  "name": "derbi-paintbooth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Color tryout tool for a 2007 Derbi Senda DRD special edition",
+  "scripts": {
+    "build": "node build.js",
+    "serve": "npx --yes serve ."
+  }
+}
